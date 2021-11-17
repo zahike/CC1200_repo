@@ -77,7 +77,7 @@ always @(posedge clk or negedge rstn)
     if (!rstn) Reg_busy <= 1'b0;
      else if (Reg_busy && Load_Next) Reg_busy <= 1'b0;
      else if (StartTran && !MISO && negSCCBclk) Reg_busy <= 1'b1;
-     else if (!Reg_busy && !Reg_CS_n && negSCCBclk) Reg_busy <= 1'b1;
+     else if (!StartTran && !Reg_busy && !Reg_CS_n && negSCCBclk) Reg_busy <= 1'b1;
           
 always @(posedge clk or negedge rstn) 
     if (!rstn) BitCounter <= 4'h0;

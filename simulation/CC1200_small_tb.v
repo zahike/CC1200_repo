@@ -64,11 +64,12 @@ MISO     = 0;               // input  MISO,
 MISO_Reg = 32'h12345679;
 #600;
 MISO     = 1'b1;               // input  MISO,
-#100;
+#1000;
 Start    = 1'b1;      // input         Start,
 #20;
 Start    = 1'b0;      // input         Start,
-#100;
+#1000;
+MISO     = 1'b0;               // input  MISO,
 force MISO     = MISO_Reg[31];               // input  MISO,
 #2000;
 Stop = 1'b1; 
@@ -86,21 +87,21 @@ reg         S_APB_0_pwrite   ; // input         S_APB_0_pwrite     ,
 initial begin 
 @(posedge rstn);
 #100;
-WriteAXI (32'h00000018,32'h0000000f);  /// Set clock
-WriteAXI (32'h0000001c,32'h0000000a);  /// Set clock
+WriteAXI (32'h00000018,32'h0000000f);  /// Enable GPIO
+WriteAXI (32'h0000001c,32'h0000000a);  /// Write GPIO
 #50;
-WriteAXI (32'h00000018,32'h00000000);  /// Set clock
+WriteAXI (32'h00000018,32'h00000000);  /// Disable GPIO
 force GPIO = 4'h5;
-ReadAXI(32'h00000020); 
+ReadAXI(32'h00000020);                  // read GPIO
 #100;
 release GPIO;
 WriteAXI (32'h00000014,32'h00000004);  /// Set clock
-WriteAXI (32'h00000010,32'h00000001);   // Set data
+WriteAXI (32'h00000010,32'h00000001);   // Set Byte Number
 WriteAXI (32'h00000008,32'h00b3456d);   // Set data
 WriteAXI (32'h00000000,32'h00000001);   // start
 ReadAXI(32'h00000004);
 while (S_APB_0_prdata) begin 
-        ReadAXI(32'h00000004);
+        ReadAXI(32'h00000004);          /// Check Busy
 end
 ReadAXI(32'h0000000c);
 
@@ -140,7 +141,7 @@ CC1200SPI_Top CC1200SPI_Top_inst(
 .APB_S_0_pwdata (S_APB_0_pwdata  ) ,
 .APB_S_0_pwrite (S_APB_0_pwrite  ) ,
 
-.GPIO(GPIO),
+//.GPIO(GPIO),
 
 .SCLK(SCLK),
 .MOSI(MOSI),
