@@ -104,6 +104,11 @@ while (S_APB_0_prdata) begin
         ReadAXI(32'h00000004);          /// Check Busy
 end
 ReadAXI(32'h0000000c);
+#10000; 
+WriteAXI (32'h00000010,32'h00000000);   // Set Byte Number
+WriteAXI (32'h00000000,32'h00000001);   // start
+#10000;     
+WriteAXI (32'h00000010,32'h0000000f);   // Set Byte Number
 
 end
 

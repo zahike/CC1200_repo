@@ -48,8 +48,16 @@
 #include <stdio.h>
 #include "platform.h"
 #include "xil_printf.h"
+#include "CC1200.h"
 
 u32 *CC1200 = XPAR_APB_M_0_BASEADDR;
+
+int writeSCC120 (int add, int data);
+int readSCC120 (int add);
+int writeLCC120 (int add, int data);
+int readLCC120 (int add);
+
+void CC1200_init();
 
 int main()
 {
@@ -58,20 +66,26 @@ int main()
     init_platform();
 
     xil_printf("Hello World\n\r");
-    CC1200[6] = 0x8;
-    CC1200[7] = 0x0;
-    CC1200[7] = 0x8;
-//    CC1200[7] = 0x5;
 
-    CC1200[5] = 0x10;
-    CC1200[4] = 0x2;
-    CC1200[2] = 0x00840000;
-    CC1200[0] = 0x1;
-//    Loop = 1;
-//    while (Loop == 1){
-//    	Loop = CC1200[1];
-//    }
+    CC1200_init();
 
+    xil_printf("Read normal registers\n\r");
+
+    usleep(100);
+
+    for (int i=0;i<0x30;i++)
+    {
+    	data = (readSCC120(i) & 0xff);
+    	xil_printf("read add 0x%04x data = 0x%02x \n\r",i,data);
+    }
+
+    xil_printf("Read extended registers 0x2f00 +\n\r");
+
+    for (int i=0x2F00;i<0x2FFF;i++)
+    {
+    	data = (readLCC120(i) & 0xff);
+    	xil_printf("read add 0x%04x data = 0x%02x \n\r",i,data);
+    }
 
 
     xil_printf("GoodBye World\n\r");

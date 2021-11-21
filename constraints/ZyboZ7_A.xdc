@@ -114,9 +114,9 @@ set_property -dict {PACKAGE_PIN U7 IOSTANDARD LVCMOS33} [get_ports {jb_p[2]}]
 set_property -dict {PACKAGE_PIN V7 IOSTANDARD LVCMOS33} [get_ports {jb_n[2]}]
 
 set_property -dict {PACKAGE_PIN Y7 IOSTANDARD LVCMOS33} [get_ports SCLK]
-set_property -dict {PACKAGE_PIN Y6 IOSTANDARD LVCMOS33} [get_ports MOSI]
-set_property -dict {PACKAGE_PIN V6 IOSTANDARD LVCMOS33} [get_ports MISO]
-set_property -dict {PACKAGE_PIN W6 IOSTANDARD LVCMOS33} [get_ports CS_n]
+set_property -dict {PACKAGE_PIN Y6 IOSTANDARD LVCMOS33} [get_ports CS_n]
+set_property -dict {PACKAGE_PIN V6 IOSTANDARD LVCMOS33} [get_ports MOSI]
+set_property -dict {PACKAGE_PIN W6 IOSTANDARD LVCMOS33} [get_ports MISO]
 set_property PULLDOWN true [get_ports MISO]
 
 ##Pmod Header JC

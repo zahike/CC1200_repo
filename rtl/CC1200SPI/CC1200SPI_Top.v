@@ -98,6 +98,7 @@ reg [3:0] Send_Stop;
 always @(posedge clk or negedge rstn)
     if (!rstn) Send_Stop <= 4'h0;
      else if (CS_n) Send_Stop <= WR;
+     else if (WR == 4'hf) Send_Stop <= WR;
      else if (Load_Next) Send_Stop <= {Send_Stop[2:0],1'b0}; 
 
 
