@@ -17,9 +17,9 @@ int writeSCC120 (int add, int data)
 	CC1200[2] = data_reg;
 	CC1200[0] = 1;
 	loop = 1;
-	while (data)
+	while (loop)
 	{
-		data = CC1200[1];
+		loop = CC1200[1];
 	};
 	usleep(10);
 };
@@ -35,9 +35,9 @@ int readSCC120 (int add)
 	CC1200[2] = data_reg;
 	CC1200[0] = 1;
 	loop = 1;
-	while (data)
+	while (loop)
 	{
-		data = CC1200[1];
+		loop = CC1200[1];
 	};
 	data = CC1200[3];
 	usleep(10);
@@ -55,9 +55,9 @@ int writeLCC120 (int add, int data)
 	CC1200[2] = data_reg;
 	CC1200[0] = 1;
 	loop = 1;
-	while (data)
+	while (loop)
 	{
-		data = CC1200[1];
+		loop = CC1200[1];
 	};
 	usleep(10);
 
@@ -74,9 +74,9 @@ int readLCC120 (int add)
 	CC1200[2] = data_reg;
 	CC1200[0] = 1;
 	loop = 1;
-	while (data)
+	while (loop)
 	{
-		data = CC1200[1];
+		loop = CC1200[1];
 	};
 	data = CC1200[3];
 	usleep(10);

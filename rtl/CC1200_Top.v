@@ -104,17 +104,23 @@ CC1200_BD CC1200_BD_inst
 .clk(clk)
 );    
 
-assign jb_p[1] = (!sw[0])?1'bz:(GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
-assign jb_n[1] = (!sw[0])?1'bz:(GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
-assign jb_p[2] = (!sw[0])?1'bz:(GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
-assign jb_n[2] = (!sw[0])?1'bz:(GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
+//assign jb_p[1] = (!sw[0])?1'bz:(GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
+//assign jb_n[1] = (!sw[0])?1'bz:(GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
+//assign jb_p[2] = (!sw[0])?1'bz:(GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
+//assign jb_n[2] = (!sw[0])?1'bz:(GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
+//assign GPIO_In = {jb_n[2],jb_p[2],jb_n[1],jb_p[1]};
+
+assign jb_p[1] = (GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
+assign jb_n[1] = (GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
+assign jb_p[2] = (GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
+assign jb_n[2] = (GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
 assign GPIO_In = {jb_n[2],jb_p[2],jb_n[1],jb_p[1]};
 
 //assign jb_p[3] = (!sw[0])?1'bz:SCLK;
 //assign jb_n[3] = (!sw[0])?1'bz:MOSI;
 //assign jb_n[4] = (!sw[0])?1'bz:CS_n;
 //assign MISO    = jb_p[4];
-
+/*
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 ila_0 ila_0_inst (
 	.clk(clk), // input wire clk
@@ -126,7 +132,7 @@ ila_0 ila_0_inst (
 	.probe4(jc_p), // input wire [3:0]  prob_p)e4 
     .probe5(jc_n) // input wire [3:0]  probe(jc5
 );
-
+*/
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 
 ila_1 ila_1_inst (

@@ -61,11 +61,48 @@ void CC1200_init();
 
 int main()
 {
-	int Loop;
+	int loop;
 	int data;
+	int gpio;
+	int i,j;
     init_platform();
 
     xil_printf("Hello World\n\r");
+
+    CC1200[6] = 1;
+    CC1200[7] = 0;
+    usleep(100);
+    CC1200[7] = 1;
+    CC1200[5] = 16;
+
+    CC1200[4] = 4;        // switch to command mode
+    CC1200[2] = 0x300000; // Reset chip
+    CC1200[0] = 1;
+	loop = 1;
+	while (loop)
+	{
+		loop = CC1200[1];
+	};
+
+    CC1200[2] = 0x3d0000;  // check if module in reset
+    data = 0;
+    while (data != 0x0f)
+    {
+		CC1200[0] = 1;
+		loop = 1;
+		while (loop)
+		{
+			loop = CC1200[1];
+		};
+		data = CC1200[3] & 0xff;
+		if (data != 0x0f) {
+			xil_printf("Chip not set\n\r");
+		}
+    }
+
+    xil_printf("Chip reset succesfuly \n\r");
+
+
 
     CC1200_init();
 
@@ -76,17 +113,67 @@ int main()
     for (int i=0;i<0x30;i++)
     {
     	data = (readSCC120(i) & 0xff);
-    	xil_printf("read add 0x%04x data = 0x%02x \n\r",i,data);
+    	xil_printf("                  0x%04x   0x%02x \n\r",i,data);
     }
 
-    xil_printf("Read extended registers 0x2f00 +\n\r");
 
     for (int i=0x2F00;i<0x2FFF;i++)
     {
     	data = (readLCC120(i) & 0xff);
-    	xil_printf("read add 0x%04x data = 0x%02x \n\r",i,data);
+    	xil_printf("                  0x%04x   0x%02x \n\r",i,data);
     }
 
+    CC1200[4] = 4;        // switch to command mode
+    CC1200[2] = 0x350000; // set chip to Tx
+    CC1200[0] = 1;
+	loop = 1;
+	while (loop)
+	{
+		loop = CC1200[1];
+	};
+
+    CC1200[2] = 0x3d0000;  // check if module in Tx
+    data = 0;
+    while (data != 0x2f)
+    {
+		CC1200[0] = 1;
+		loop = 1;
+		while (loop)
+		{
+			loop = CC1200[1];
+		};
+		data = CC1200[3] & 0xff;
+		if (data != 0x2f)
+		{
+			xil_printf("Chip is not in Tx\n\r");
+		}
+    }
+	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
+
+    CC1200[4] = 2;        // switch to command mode
+    CC1200[2] = 0x3f1200; // Reset chip
+	while (1)
+	{
+	    CC1200[0] = 1;
+		loop = 1;
+//		while (loop)
+//		{
+//			loop = CC1200[1];
+//		};
+		i=0;
+		j=0;
+
+		gpio = 0;
+		while ((gpio & 0x8) == 0)
+		{
+			gpio = CC1200[8];
+		}
+		while (gpio & 0x8)
+		{
+			gpio = CC1200[8];
+		}
+    usleep(1);
+	}
 
     xil_printf("GoodBye World\n\r");
 
