@@ -55,7 +55,9 @@ void CC1200_init()
 	writeSCC120(0x002B,   0x7F);
 	writeSCC120(0x002C,   0x56);
 	writeSCC120(0x002D,   0x0F);
-	writeSCC120(0x002E,   0x01);
+//	writeSCC120(0x002E,   0x01);   // Paket length 1 byte
+//	writeSCC120(0x002E,   0x7c);   // Paket length 124 byts
+	writeSCC120(0x002E,   0x12);   // Paket length 13 byts
 	
 	writeLCC120(0x2F00,   0x00);
 	writeLCC120(0x2F01,   0x23);

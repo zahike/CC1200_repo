@@ -51,6 +51,7 @@
 #include "CC1200.h"
 
 u32 *CC1200 = XPAR_APB_M_0_BASEADDR;
+u32 *MEM    = XPAR_APB_M_1_BASEADDR;
 
 int writeSCC120 (int add, int data);
 int readSCC120 (int add);
@@ -68,6 +69,10 @@ int main()
     init_platform();
 
     xil_printf("Hello World\n\r");
+
+    for (i=0;i<128;i++){
+    	MEM[128+i] = 256*i+i;
+    }
 
     CC1200[6] = 1;
     CC1200[7] = 0;
@@ -150,30 +155,33 @@ int main()
     }
 	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
 
-    CC1200[4] = 2;        // switch to command mode
-    CC1200[2] = 0x3f1200; // Reset chip
-	while (1)
-	{
-	    CC1200[0] = 1;
-		loop = 1;
-//		while (loop)
+//    CC1200[4] = 2;        // switch to command mode
+//    CC1200[2] = 0x3f1200; // Reset chip
+//	while (1)
+//	{
+//	    CC1200[0] = 1;
+//		loop = 1;
+////		while (loop)
+////		{
+////			loop = CC1200[1];
+////		};
+//		i=0;
+//		j=0;
+//
+//		gpio = 0;
+//		while ((gpio & 0x8) == 0)
 //		{
-//			loop = CC1200[1];
-//		};
-		i=0;
-		j=0;
+//			gpio = CC1200[8];
+//		}
+//		while (gpio & 0x8)
+//		{
+//			gpio = CC1200[8];
+//		}
+//    usleep(1);
+//	}
 
-		gpio = 0;
-		while ((gpio & 0x8) == 0)
-		{
-			gpio = CC1200[8];
-		}
-		while (gpio & 0x8)
-		{
-			gpio = CC1200[8];
-		}
-    usleep(1);
-	}
+	MEM[0] = 1;
+	CC1200[0] = 2;
 
     xil_printf("GoodBye World\n\r");
 

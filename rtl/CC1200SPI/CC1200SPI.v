@@ -26,7 +26,7 @@ input rstn,
 
 input         Start,
 input         Stop,
-input         Busy,
+output        Busy,
 input  [7:0] DataOut,
 output [7:0] DataIn,
 input  [15:0] ClockDiv,

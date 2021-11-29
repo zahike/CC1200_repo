@@ -73,6 +73,9 @@ MISO     = 1'b0;               // input  MISO,
 force MISO     = MISO_Reg[31];               // input  MISO,
 #2000;
 Stop = 1'b1; 
+#30000;
+MISO_Reg = 32'h00000000;
+
 end
 
 reg [31:0]  S_APB_0_paddr    ; // input  [31:0] S_APB_0_paddr      ,
@@ -109,6 +112,8 @@ WriteAXI (32'h00000010,32'h00000000);   // Set Byte Number
 WriteAXI (32'h00000000,32'h00000001);   // start
 #10000;     
 WriteAXI (32'h00000010,32'h0000000f);   // Set Byte Number
+#10000; 
+WriteAXI (32'h00000000,32'h00000002);   // Set Byte Number
 
 end
 
@@ -131,6 +136,62 @@ end
 //.CS_n(CS_n)
 //    );
 
+reg [31:0]  S_APB_1_paddr    ; // input  [31:0] S_APB_0_paddr      ,
+reg         S_APB_1_penable  ; // input         S_APB_0_penable    ,
+wire [31:0] S_APB_1_prdata   ;  // output [31:0] S_APB_0_prdata     ,
+wire        S_APB_1_pready   ;  // output        S_APB_0_pready     ,
+reg         S_APB_1_psel     ; // input         S_APB_0_psel       ,
+wire        S_APB_1_pslverr  ;  // output        S_APB_0_pslverr    ,
+reg [31:0]  S_APB_1_pwdata   ; // input  [31:0] S_APB_0_pwdata     ,
+reg         S_APB_1_pwrite   ; // input         S_APB_0_pwrite     ,
+
+reg [6:0] WData;
+reg [6:0] WAdd;
+
+initial begin 
+WData = 7'h7f;
+WAdd  = 7'h00;
+@(posedge rstn);
+#100;
+repeat (128) begin
+ Write1AXI({21'h000001,WAdd,2'b00},{20'h00000,WData[3:0],1'b0,WData});
+ WAdd  = WAdd  + 1;
+ WData = WData - 1;
+ @(posedge APBclk);
+    end
+
+//repeat (128) begin
+// Read1AXI((32'h00000080+WData));
+// WData = WData + 1;
+// @(posedge APBclk);
+//    end
+#40000;
+ Write1AXI(32'h00000000,32'h00000001);
+end
+
+wire Tran     ;
+wire Next_read;
+wire [11:0] data2SPI;
+
+Test_Mem Test_Mem_inst(
+.APBclk(APBclk),                    // input  APBclk,
+.clk   (clk   ),                       // input  clk,
+.rstn  (rstn  ),                      // input  rstn,
+                           // 
+.APB_S_0_paddr  (S_APB_1_paddr  ),      // input  [31:0] APB_S_0_paddr,
+.APB_S_0_penable(S_APB_1_penable),    // input         APB_S_0_penable,
+.APB_S_0_prdata (S_APB_1_prdata ),     // output [31:0] APB_S_0_prdata,
+.APB_S_0_pready (S_APB_1_pready ),     // output        APB_S_0_pready,
+.APB_S_0_psel   (S_APB_1_psel   ),       // input         APB_S_0_psel,
+.APB_S_0_pslverr(S_APB_1_pslverr),    // output        APB_S_0_pslverr,
+.APB_S_0_pwdata (S_APB_1_pwdata ),     // input  [31:0] APB_S_0_pwdata,
+.APB_S_0_pwrite (S_APB_1_pwrite ),     // input         APB_S_0_pwrite,
+                           // 
+.TranSPIen     (Tran     ),                      // output Tran,
+.data2SPI (data2SPI ),                 // output [11:0] data2SPI
+.next_read(Next_read)                  // input  next_read
+
+    );
 
 CC1200SPI_Top CC1200SPI_Top_inst(
 .APBclk(APBclk),
@@ -146,7 +207,9 @@ CC1200SPI_Top CC1200SPI_Top_inst(
 .APB_S_0_pwdata (S_APB_0_pwdata  ) ,
 .APB_S_0_pwrite (S_APB_0_pwrite  ) ,
 
-//.GPIO(GPIO),
+.GetDataEn(Tran),  //input        GetDataEn,
+.GetData  (data2SPI  ),    //input [11:0] GetData,
+.Next_data(Next_read),  //output       Next_data,
 
 .SCLK(SCLK),
 .MOSI(MOSI),
@@ -205,6 +268,59 @@ begin
         if (S_APB_0_pready) begin 
                 S_APB_0_psel  = 1'b0;
                 S_APB_0_penable  = 1'b0;
+                end
+    end
+end 
+endtask 
+
+
+task Read1AXI;
+input [31:0] addr;
+begin 
+    S_APB_1_paddr    = 0; // input  [31:0] S_APB_1_paddr      ,
+    S_APB_1_penable  = 0; // input         S_APB_1_penable    ,
+    S_APB_1_psel     = 0; // input         S_APB_1_psel       ,
+    S_APB_1_pwdata   = 0; // input  [31:0] S_APB_1_pwdata     ,
+    S_APB_1_pwrite   = 0; // input         S_APB_1_pwrite     ,
+    @(posedge APBclk);
+    S_APB_1_paddr   = addr;
+    S_APB_1_psel    = 1'b1;
+    @(posedge APBclk);
+    S_APB_1_penable    = 1'b1;
+    while (~S_APB_1_pready) begin
+        @(posedge APBclk);    
+        if (S_APB_1_pready) begin 
+                S_APB_1_psel  = 1'b0;
+                S_APB_1_penable  = 1'b0;
+                end
+    end
+end 
+endtask 
+
+
+task Write1AXI;
+input [31:0] addr;
+input [31:0] data;
+begin 
+    S_APB_1_paddr    = 0; // input  [31:0] S_APB_1_paddr      ,
+    S_APB_1_penable  = 0; // input         S_APB_1_penable    ,
+    S_APB_1_psel     = 0; // input         S_APB_1_psel       ,
+    S_APB_1_pwdata   = 0; // input  [31:0] S_APB_1_pwdata     ,
+    S_APB_1_pwrite   = 0; // input         S_APB_1_pwrite     ,
+
+
+    @(posedge APBclk);
+    S_APB_1_paddr   = addr;
+    S_APB_1_pwdata  = data;
+    S_APB_1_pwrite  = 1'b1;
+    S_APB_1_psel    = 1'b1;
+    @(posedge APBclk);
+    S_APB_1_penable  = 1'b1;
+    while (~S_APB_1_pready) begin
+        @(posedge APBclk);    
+        if (S_APB_1_pready) begin 
+                S_APB_1_psel  = 1'b0;
+                S_APB_1_penable  = 1'b0;
                 end
     end
 end 
