@@ -59,6 +59,7 @@ int writeLCC120 (int add, int data);
 int readLCC120 (int add);
 
 void CC1200_init();
+void RxCC1200_init();
 
 int main()
 {
@@ -109,7 +110,8 @@ int main()
 
 
 
-    CC1200_init();
+//    CC1200_init();
+	RxCC1200_init();
 
     xil_printf("Read normal registers\n\r");
 
@@ -129,7 +131,8 @@ int main()
     }
 
     CC1200[4] = 4;        // switch to command mode
-    CC1200[2] = 0x350000; // set chip to Tx
+//    CC1200[2] = 0x350000; // set chip to Tx
+    CC1200[2] = 0x340000; // set chip to Rx
     CC1200[0] = 1;
 	loop = 1;
 	while (loop)
@@ -139,7 +142,8 @@ int main()
 
     CC1200[2] = 0x3d0000;  // check if module in Tx
     data = 0;
-    while (data != 0x2f)
+//    while (data != 0x20)
+    while (data != 0x10)
     {
 		CC1200[0] = 1;
 		loop = 1;
@@ -147,41 +151,22 @@ int main()
 		{
 			loop = CC1200[1];
 		};
-		data = CC1200[3] & 0xff;
-		if (data != 0x2f)
+		data = CC1200[3] & 0xf0;
+//		if (data != 0x20)
+//		{
+//			xil_printf("Chip is not in Tx\n\r");
+//		}
+		if (data != 0x10)
 		{
-			xil_printf("Chip is not in Tx\n\r");
+			xil_printf("Chip is not in Rx\n\r");
 		}
     }
-	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
+//	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
+	xil_printf("Switch to Rx seccesfuly in Rx\n\r");
 
-//    CC1200[4] = 2;        // switch to command mode
-//    CC1200[2] = 0x3f1200; // Reset chip
-//	while (1)
-//	{
-//	    CC1200[0] = 1;
-//		loop = 1;
-////		while (loop)
-////		{
-////			loop = CC1200[1];
-////		};
-//		i=0;
-//		j=0;
-//
-//		gpio = 0;
-//		while ((gpio & 0x8) == 0)
-//		{
-//			gpio = CC1200[8];
-//		}
-//		while (gpio & 0x8)
-//		{
-//			gpio = CC1200[8];
-//		}
-//    usleep(1);
-//	}
-
-	MEM[0] = 1;
-	CC1200[0] = 2;
+//	CC1200[0] = 2; // Enable Tx
+	CC1200[0] = 4; // Enable Rx
+//	MEM[0] = 1;		// send data from FIFO
 
     xil_printf("GoodBye World\n\r");
 

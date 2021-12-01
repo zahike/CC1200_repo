@@ -88,6 +88,7 @@ reg [31:0]  S_APB_0_pwdata   ; // input  [31:0] S_APB_0_pwdata     ,
 reg         S_APB_0_pwrite   ; // input         S_APB_0_pwrite     ,
 
 initial begin 
+force CC1200SPI_Top_inst.GPIO_In = 4'h0;
 @(posedge rstn);
 #100;
 WriteAXI (32'h00000018,32'h0000000f);  /// Enable GPIO
@@ -114,6 +115,12 @@ WriteAXI (32'h00000000,32'h00000001);   // start
 WriteAXI (32'h00000010,32'h0000000f);   // Set Byte Number
 #10000; 
 WriteAXI (32'h00000000,32'h00000002);   // Set Byte Number
+#40000;
+WriteAXI (32'h00000000,32'h00000004);   // Set Byte Number
+#1000;
+force CC1200SPI_Top_inst.GPIO_In = 4'h8;
+#1000;
+force CC1200SPI_Top_inst.GPIO_In = 4'h0;
 
 end
 

@@ -50,10 +50,15 @@ inout [2:1] jb_n,
 inout [4:1] jc_p,
 inout [4:1] jc_n,
 
-output SCLK,
-output MOSI,
-input  MISO,
-output CS_n
+inout SCLK,
+inout MOSI,
+input MISO,
+inout CS_n
+//output SCLK,
+//output MOSI,
+//input  MISO,
+//output CS_n
+
     );
 wire clk;    
 /////////////////////////////////////////////////////////// 
@@ -62,10 +67,14 @@ wire clk;
 // Outputs
 wire [3:0] GPIO_OutEn;		//output [3:0] GPIO_OutEn_0;
 wire [3:0] GPIO_Out;		//output [3:0] GPIO_Out_0;
-//wire SCLK;		//output  SCLK_0;
-//wire MOSI;		//output  MOSI_0;
-//wire MISO;		//input  MISO_0;
-//wire CS_n;		//output  CS_n_0;
+wire  SCLK_0;		//output  SCLK_0;
+wire  MOSI_0;		//output  MOSI_0;
+wire  MISO_0; 		//input  MISO_0;
+wire  CS_n_0;		//output  CS_n_0;
+wire  SCLK_I;		//output  SCLK_0;
+wire  MOSI_I;		//output  MOSI_0;
+wire  MISO_I; 		//input  MISO_0;
+wire  CS_n_I;		//output  CS_n_0;
 // Inputs
 wire [3:0] GPIO_In;		//input [3:0] GPIO_In_0;
 
@@ -96,56 +105,57 @@ CC1200_BD CC1200_BD_inst
 .GPIO_OutEn_0(GPIO_OutEn),        //output [3:0] GPIO_OutEn_0
 .GPIO_Out_0  (GPIO_Out  ),        //output [3:0] GPIO_Out_0
 .GPIO_In_0   (GPIO_In   ),        //input [3:0] GPIO_In_0
-.SCLK_0(SCLK),        //output  SCLK_0
-.MOSI_0(MOSI),        //output  MOSI_0
-.MISO_0(MISO),        //input  MISO_0
-.CS_n_0(CS_n),		//output  CS_n_0
+.SCLK_0(SCLK_0),        //output  SCLK_0
+.MOSI_0(MOSI_0),        //output  MOSI_0
+.MISO_0(MISO_0),        //input  MISO_0
+.CS_n_0(CS_n_0),		//output  CS_n_0
 
 .clk(clk)
 );    
 
-//assign jb_p[1] = (!sw[0])?1'bz:(GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
-//assign jb_n[1] = (!sw[0])?1'bz:(GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
-//assign jb_p[2] = (!sw[0])?1'bz:(GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
-//assign jb_n[2] = (!sw[0])?1'bz:(GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
-//assign GPIO_In = {jb_n[2],jb_p[2],jb_n[1],jb_p[1]};
 
-assign jb_p[1] = (GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
-assign jb_n[1] = (GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
-assign jb_p[2] = (GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
-assign jb_n[2] = (GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
+assign jb_p[1] = (sw[0]&&GPIO_OutEn[0]) ? GPIO_Out[0] : 1'bz;
+assign jb_n[1] = (sw[0]&&GPIO_OutEn[1]) ? GPIO_Out[1] : 1'bz;
+assign jb_p[2] = (sw[0]&&GPIO_OutEn[2]) ? GPIO_Out[2] : 1'bz;
+assign jb_n[2] = (sw[0]&&GPIO_OutEn[3]) ? GPIO_Out[3] : 1'bz;
 assign GPIO_In = {jb_n[2],jb_p[2],jb_n[1],jb_p[1]};
 
-//assign jb_p[3] = (!sw[0])?1'bz:SCLK;
-//assign jb_n[3] = (!sw[0])?1'bz:MOSI;
-//assign jb_n[4] = (!sw[0])?1'bz:CS_n;
-//assign MISO    = jb_p[4];
-/*
+assign SCLK = (sw[0]) ? SCLK_0 : 1'bz; 
+assign MOSI = (sw[0]) ? MOSI_0 : 1'bz; 
+assign CS_n = (sw[0]) ? CS_n_0 : 1'bz; 
+
+assign  SCLK_I = SCLK;		//output  SCLK_0;
+assign  MOSI_I = MOSI;		//output  MOSI_0;
+assign  MISO_I = MISO;  	//input  MISO_0;
+assign  CS_n_I = CS_n;		//output  CS_n_0;
+
+assign MISO_0 = MISO;
+
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 ila_0 ila_0_inst (
 	.clk(clk), // input wire clk
 
 	.probe0(sw), // input wire [3:0]  probe0  
-	.probe1(GPIO_OutEn), // input wire [3:0]  probe1
-	.probe2({jb_p,jb_p}), // input wire [3:0]  probe2 );
-	.probe3({jb_n,jb_n}), // input wire [3:0]  probe3
-	.probe4(jc_p), // input wire [3:0]  prob_p)e4 
-    .probe5(jc_n) // input wire [3:0]  probe(jc5
+    .probe1(GPIO_OutEn), // input wire [3:0]  probe1 
+    .probe2(GPIO_In), // input wire [3:0]  probe2 
+    .probe3(SCLK_I), // input wire [0:0]  probe3 
+    .probe4(MOSI_I), // input wire [0:0]  probe4 
+    .probe5(MISO_I), // input wire [0:0]  probe5 
+    .probe6(CS_n_I) // input wire [0:0]  probe6
 );
-*/
-//----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
+////----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 
-ila_1 ila_1_inst (
-	.clk(clk), // input wire clk
+//ila_1 ila_1_inst (
+//	.clk(clk), // input wire clk
 
 
-	.probe0(GPIO_OutEn), // input wire [3:0]  probe0  
-	.probe1(GPIO_Out  ), // input wire [3:0]  probe1 
-	.probe2(GPIO_In   ), // input wire [3:0]  probe2 
-	.probe3(MISO), // input wire [0:0]  probe3 
-	.probe4(MOSI), // input wire [0:0]  probe4 
-	.probe5(SCLK), // input wire [0:0]  probe5 
-	.probe6(CS_n) // input wire [0:0]  probe6
-);
+//	.probe0(GPIO_OutEn), // input wire [3:0]  probe0  
+//	.probe1(GPIO_Out  ), // input wire [3:0]  probe1 
+//	.probe2(GPIO_In   ), // input wire [3:0]  probe2 
+//	.probe3(MISO), // input wire [0:0]  probe3 
+//	.probe4(MOSI), // input wire [0:0]  probe4 
+//	.probe5(SCLK), // input wire [0:0]  probe5 
+//	.probe6(CS_n) // input wire [0:0]  probe6
+//);
 
 endmodule

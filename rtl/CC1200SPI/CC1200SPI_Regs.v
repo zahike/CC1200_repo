@@ -43,7 +43,8 @@ output [3:0]  GPIO_OutEn,
 output [3:0]  GPIO_Out,
 input  [3:0]  GPIO_In,
 
-output Trans
+output Trans,
+output Receive
     );
 
 reg        RegStart   ;
@@ -57,6 +58,11 @@ always @(posedge clk or negedge rstn)
     if (!rstn) RegTrans <= 1'b0;
      else if (APB_S_0_penable && APB_S_0_psel && APB_S_0_pwrite && (APB_S_0_paddr[7:0] == 8'h00)) RegTrans <= APB_S_0_pwdata[1];
 assign Trans = RegTrans;
+reg        RegReceive   ;
+always @(posedge clk or negedge rstn)
+    if (!rstn) RegReceive <= 1'b0;
+     else if (APB_S_0_penable && APB_S_0_psel && APB_S_0_pwrite && (APB_S_0_paddr[7:0] == 8'h00)) RegReceive <= APB_S_0_pwdata[2];
+assign Receive = RegReceive;
 reg [31:0] RegDataOut ;
 always @(posedge clk or negedge rstn)
     if (!rstn) RegDataOut <= 32'h00000000;
@@ -84,7 +90,7 @@ always @(posedge clk or negedge rstn)
 assign GPIO_Out = RegGPIO_Out;
 
 
-assign APB_S_0_prdata = (APB_S_0_paddr[7:0] == 8'h00) ? {30'h00000000,RegTrans,RegStart} :
+assign APB_S_0_prdata = (APB_S_0_paddr[7:0] == 8'h00) ? {29'h00000000,RegReceive,RegTrans,RegStart} :
                         (APB_S_0_paddr[7:0] == 8'h04) ? {31'h00000000,Busy}              :
                         (APB_S_0_paddr[7:0] == 8'h08) ? RegDataOut                       :
                         (APB_S_0_paddr[7:0] == 8'h0c) ? DataIn                           :

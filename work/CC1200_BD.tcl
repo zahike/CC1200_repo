@@ -303,12 +303,12 @@ proc create_root_design { parentCell } {
   # Create instance: ila_0, and set properties
   set ila_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0 ]
   set_property -dict [ list \
+   CONFIG.C_DATA_DEPTH {4096} \
    CONFIG.C_ENABLE_ILA_AXI_MON {false} \
    CONFIG.C_MONITOR_TYPE {Native} \
    CONFIG.C_NUM_OF_PROBES {7} \
-   CONFIG.C_PROBE0_WIDTH {32} \
-   CONFIG.C_PROBE2_WIDTH {32} \
-   CONFIG.C_PROBE5_WIDTH {32} \
+   CONFIG.C_PROBE0_WIDTH {4} \
+   CONFIG.C_PROBE5_WIDTH {8} \
  ] $ila_0
 
   # Create instance: processing_system7_0, and set properties
@@ -808,16 +808,18 @@ proc create_root_design { parentCell } {
   connect_bd_net -net CC1200SPI_Top_0_APB_S_0_prdata [get_bd_pins CC1200SPI_Top_0/APB_S_0_prdata] [get_bd_pins axi_apb_bridge_0/m_apb_prdata]
   connect_bd_net -net CC1200SPI_Top_0_APB_S_0_pready [get_bd_pins CC1200SPI_Top_0/APB_S_0_pready] [get_bd_pins axi_apb_bridge_0/m_apb_pready]
   connect_bd_net -net CC1200SPI_Top_0_APB_S_0_pslverr [get_bd_pins CC1200SPI_Top_0/APB_S_0_pslverr] [get_bd_pins axi_apb_bridge_0/m_apb_pslverr]
-  connect_bd_net -net CC1200SPI_Top_0_CS_n [get_bd_ports CS_n_0] [get_bd_pins CC1200SPI_Top_0/CS_n]
+  connect_bd_net -net CC1200SPI_Top_0_CS_n [get_bd_ports CS_n_0] [get_bd_pins CC1200SPI_Top_0/CS_n] [get_bd_pins ila_0/probe4]
   connect_bd_net -net CC1200SPI_Top_0_GPIO_Out [get_bd_ports GPIO_Out_0] [get_bd_pins CC1200SPI_Top_0/GPIO_Out]
   connect_bd_net -net CC1200SPI_Top_0_GPIO_OutEn [get_bd_ports GPIO_OutEn_0] [get_bd_pins CC1200SPI_Top_0/GPIO_OutEn]
-  connect_bd_net -net CC1200SPI_Top_0_MOSI [get_bd_ports MOSI_0] [get_bd_pins CC1200SPI_Top_0/MOSI]
+  connect_bd_net -net CC1200SPI_Top_0_MOSI [get_bd_ports MOSI_0] [get_bd_pins CC1200SPI_Top_0/MOSI] [get_bd_pins ila_0/probe2]
   connect_bd_net -net CC1200SPI_Top_0_Next_data [get_bd_pins CC1200SPI_Top_0/Next_data] [get_bd_pins Test_Mem_0/next_read]
-  connect_bd_net -net CC1200SPI_Top_0_SCLK [get_bd_ports SCLK_0] [get_bd_pins CC1200SPI_Top_0/SCLK]
-  connect_bd_net -net GPIO_In_0_1 [get_bd_ports GPIO_In_0] [get_bd_pins CC1200SPI_Top_0/GPIO_In]
-  connect_bd_net -net MISO_0_1 [get_bd_ports MISO_0] [get_bd_pins CC1200SPI_Top_0/MISO]
-  connect_bd_net -net Test_Mem_0_APB_S_0_prdata [get_bd_pins Test_Mem_0/APB_S_0_prdata] [get_bd_pins axi_apb_bridge_1/m_apb_prdata] [get_bd_pins ila_0/probe2]
-  connect_bd_net -net Test_Mem_0_APB_S_0_pready [get_bd_pins Test_Mem_0/APB_S_0_pready] [get_bd_pins axi_apb_bridge_1/m_apb_pready] [get_bd_pins ila_0/probe3]
+  connect_bd_net -net CC1200SPI_Top_0_RxData [get_bd_pins CC1200SPI_Top_0/RxData] [get_bd_pins ila_0/probe5]
+  connect_bd_net -net CC1200SPI_Top_0_RxValid [get_bd_pins CC1200SPI_Top_0/RxValid] [get_bd_pins ila_0/probe6]
+  connect_bd_net -net CC1200SPI_Top_0_SCLK [get_bd_ports SCLK_0] [get_bd_pins CC1200SPI_Top_0/SCLK] [get_bd_pins ila_0/probe1]
+  connect_bd_net -net GPIO_In_0_1 [get_bd_ports GPIO_In_0] [get_bd_pins CC1200SPI_Top_0/GPIO_In] [get_bd_pins ila_0/probe0]
+  connect_bd_net -net MISO_0_1 [get_bd_ports MISO_0] [get_bd_pins CC1200SPI_Top_0/MISO] [get_bd_pins ila_0/probe3]
+  connect_bd_net -net Test_Mem_0_APB_S_0_prdata [get_bd_pins Test_Mem_0/APB_S_0_prdata] [get_bd_pins axi_apb_bridge_1/m_apb_prdata]
+  connect_bd_net -net Test_Mem_0_APB_S_0_pready [get_bd_pins Test_Mem_0/APB_S_0_pready] [get_bd_pins axi_apb_bridge_1/m_apb_pready]
   connect_bd_net -net Test_Mem_0_APB_S_0_pslverr [get_bd_pins Test_Mem_0/APB_S_0_pslverr] [get_bd_pins axi_apb_bridge_1/m_apb_pslverr]
   connect_bd_net -net Test_Mem_0_Tran [get_bd_pins CC1200SPI_Top_0/GetDataEn] [get_bd_pins Test_Mem_0/TranSPIen]
   connect_bd_net -net Test_Mem_0_data2SPI [get_bd_pins CC1200SPI_Top_0/GetData] [get_bd_pins Test_Mem_0/data2SPI]
@@ -826,13 +828,13 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_apb_bridge_0_m_apb_psel [get_bd_pins CC1200SPI_Top_0/APB_S_0_psel] [get_bd_pins axi_apb_bridge_0/m_apb_psel]
   connect_bd_net -net axi_apb_bridge_0_m_apb_pwdata [get_bd_pins CC1200SPI_Top_0/APB_S_0_pwdata] [get_bd_pins axi_apb_bridge_0/m_apb_pwdata]
   connect_bd_net -net axi_apb_bridge_0_m_apb_pwrite [get_bd_pins CC1200SPI_Top_0/APB_S_0_pwrite] [get_bd_pins axi_apb_bridge_0/m_apb_pwrite]
-  connect_bd_net -net axi_apb_bridge_1_m_apb_paddr [get_bd_pins Test_Mem_0/APB_S_0_paddr] [get_bd_pins axi_apb_bridge_1/m_apb_paddr] [get_bd_pins ila_0/probe0]
-  connect_bd_net -net axi_apb_bridge_1_m_apb_penable [get_bd_pins Test_Mem_0/APB_S_0_penable] [get_bd_pins axi_apb_bridge_1/m_apb_penable] [get_bd_pins ila_0/probe1]
-  connect_bd_net -net axi_apb_bridge_1_m_apb_psel [get_bd_pins Test_Mem_0/APB_S_0_psel] [get_bd_pins axi_apb_bridge_1/m_apb_psel] [get_bd_pins ila_0/probe4]
-  connect_bd_net -net axi_apb_bridge_1_m_apb_pwdata [get_bd_pins Test_Mem_0/APB_S_0_pwdata] [get_bd_pins axi_apb_bridge_1/m_apb_pwdata] [get_bd_pins ila_0/probe5]
-  connect_bd_net -net axi_apb_bridge_1_m_apb_pwrite [get_bd_pins Test_Mem_0/APB_S_0_pwrite] [get_bd_pins axi_apb_bridge_1/m_apb_pwrite] [get_bd_pins ila_0/probe6]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins CC1200SPI_Top_0/APBclk] [get_bd_pins Test_Mem_0/APBclk] [get_bd_pins axi_apb_bridge_0/s_axi_aclk] [get_bd_pins axi_apb_bridge_1/s_axi_aclk] [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins ila_0/clk] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_clk_wiz_0_50M/slowest_sync_clk]
-  connect_bd_net -net clk_wiz_0_clk_out2 [get_bd_ports clk] [get_bd_pins CC1200SPI_Top_0/clk] [get_bd_pins Test_Mem_0/clk] [get_bd_pins clk_wiz_0/clk_out2]
+  connect_bd_net -net axi_apb_bridge_1_m_apb_paddr [get_bd_pins Test_Mem_0/APB_S_0_paddr] [get_bd_pins axi_apb_bridge_1/m_apb_paddr]
+  connect_bd_net -net axi_apb_bridge_1_m_apb_penable [get_bd_pins Test_Mem_0/APB_S_0_penable] [get_bd_pins axi_apb_bridge_1/m_apb_penable]
+  connect_bd_net -net axi_apb_bridge_1_m_apb_psel [get_bd_pins Test_Mem_0/APB_S_0_psel] [get_bd_pins axi_apb_bridge_1/m_apb_psel]
+  connect_bd_net -net axi_apb_bridge_1_m_apb_pwdata [get_bd_pins Test_Mem_0/APB_S_0_pwdata] [get_bd_pins axi_apb_bridge_1/m_apb_pwdata]
+  connect_bd_net -net axi_apb_bridge_1_m_apb_pwrite [get_bd_pins Test_Mem_0/APB_S_0_pwrite] [get_bd_pins axi_apb_bridge_1/m_apb_pwrite]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins CC1200SPI_Top_0/APBclk] [get_bd_pins Test_Mem_0/APBclk] [get_bd_pins axi_apb_bridge_0/s_axi_aclk] [get_bd_pins axi_apb_bridge_1/s_axi_aclk] [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_clk_wiz_0_50M/slowest_sync_clk]
+  connect_bd_net -net clk_wiz_0_clk_out2 [get_bd_ports clk] [get_bd_pins CC1200SPI_Top_0/clk] [get_bd_pins Test_Mem_0/clk] [get_bd_pins clk_wiz_0/clk_out2] [get_bd_pins ila_0/clk]
   connect_bd_net -net clk_wiz_0_locked [get_bd_pins clk_wiz_0/locked] [get_bd_pins rst_clk_wiz_0_50M/dcm_locked] [get_bd_pins rst_clk_wiz_0_50M/ext_reset_in]
   connect_bd_net -net rst_clk_wiz_0_50M_interconnect_aresetn [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins rst_clk_wiz_0_50M/interconnect_aresetn]
   connect_bd_net -net rst_clk_wiz_0_50M_peripheral_aresetn [get_bd_pins CC1200SPI_Top_0/rstn] [get_bd_pins Test_Mem_0/rstn] [get_bd_pins axi_apb_bridge_0/s_axi_aresetn] [get_bd_pins axi_apb_bridge_1/s_axi_aresetn] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins rst_clk_wiz_0_50M/peripheral_aresetn]

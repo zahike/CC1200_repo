@@ -42,12 +42,14 @@ input        GetDataEn,
 input [11:0] GetData,
 output       Next_data,
 
+output [7:0] RxData,
+output       RxValid,
+
 output SCLK,
 output MOSI,
 input  MISO,
 output CS_n
     );
-
 
 wire        Start        ; // output        Start,
 wire        Busy         ; // input         Busy,
@@ -56,6 +58,7 @@ wire [31:0] DataIn       ; // input  [31:0] DataIn,
 wire [3:0]  WR           ; // output [3:0]  WR,
 wire [15:0] ClockDiv     ; // output [15:0] ClockDiv,
 wire        Trans        ; // output Trans
+wire        Receive      ; // output Receive
 
 CC1200SPI_Regs CC1200SPI_Regs_inst(
 .clk(APBclk),
@@ -80,7 +83,8 @@ CC1200SPI_Regs CC1200SPI_Regs_inst(
 .GPIO_Out  (GPIO_Out  ),      // output [3:0]  GPIO_Out,
 .GPIO_In   (GPIO_In   ),     // input  [3:0]  GPIO_In
 
-.Trans     (Trans     )     // output Trans
+.Trans     (Trans     ),     // output Trans
+.Receive   (Receive   ) // output Receive
     );
 
 //////////////////////// Zynq Control SPI //////////////////////// 
@@ -108,6 +112,9 @@ always @(posedge clk or negedge rstn)
      else if (Load_Next) Send_Stop <= {Send_Stop[2:0],1'b0}; 
 //////////////////////// End Of Zynq Control SPI //////////////////////// 
 
+/////////////////////////////////////////////////////////////////
+/////////////////// Transmit Data from Memory ///////////////////
+/////////////////////////////////////////////////////////////////
 //Trans
 
 //input        GetDataEn,
@@ -154,18 +161,55 @@ wire [7:0] Byte2SPI = (Tran_SPI_count != 3'b101) ? 8'h00                        
 assign Next_data = (Tran_SPI_count != 3'b101) ? 1'b0 : 
                    (SPIdatactrl    ==  2'b10) ? 1'b0 : Load_Next ;
 
-                     
-wire SPIstart = (Trans) ? (DevTranStart == 2'b01) : Start;
-wire SPIstop  = (Trans) ? (DevTranStart == 2'b00) : Send_Stop[2];
+/////////////////// End of Transmit Data from Memory ///////////////////
 
-wire [7:0] SPIdata = (!Trans)                   ? Send_Data[23:16] :
-                     (Tran_SPI_count == 3'b000) ? RegCommand       :
-                     (Tran_SPI_count == 3'b001) ? RegVsync[31:24]  :
-                     (Tran_SPI_count == 3'b010) ? RegVsync[23:16]  :
-                     (Tran_SPI_count == 3'b011) ? RegVsync[15: 8]  :
-                     (Tran_SPI_count == 3'b100) ? RegVsync[ 7: 0]  :
-                     (Tran_SPI_count == 3'b101) ? Byte2SPI         : 
-                     8'h00;
+/////////////////////////////////////////////////////////////////
+///////////////////  Receive data to Memory   ///////////////////
+/////////////////////////////////////////////////////////////////
+//GPIO_In
+wire [7:0] RegRxCommand = 8'hFF;
+wire [7:0] Rx_Pkt_size  = 8'h0c;
+
+reg [1:0] DevRxPkt;
+always @(posedge clk or negedge rstn)
+    if (!rstn) DevRxPkt <= 2'b00;
+     else DevRxPkt <= {DevRxPkt[0],GPIO_In[3]};
+wire posRxPkt = (DevRxPkt == 3'b01) ? 1'b1 : 1'b0;
+wire negRxPkt = (DevRxPkt == 3'b10) ? 1'b1 : 1'b0;
+
+//Receive
+reg ReadRxFIFO;
+reg [7:0] ReadRxCounter;
+always @(posedge clk or negedge rstn) 
+    if (!rstn) ReadRxFIFO <= 1'b0;
+     else if (negRxPkt) ReadRxFIFO <= 1'b1;
+     else if (Load_Next && (ReadRxCounter == Rx_Pkt_size)) ReadRxFIFO <= 1'b0;
+
+always @(posedge clk or negedge rstn) 
+    if (!rstn) ReadRxCounter <= 8'h00;
+     else if (!ReadRxFIFO) ReadRxCounter <= 8'h00;
+     else if (Load_Next) ReadRxCounter <= ReadRxCounter + 1;
+     
+     
+/////////////////// End of Receive data to Memory   ///////////////////
+                     
+wire SPIstart = (Trans)   ? (DevTranStart == 2'b01) : 
+                (Receive) ? negRxPkt : Start;
+wire SPIstop  = (Trans) ? (DevTranStart == 2'b00) : 
+                (Receive && (ReadRxCounter != Rx_Pkt_size)) ? 1'b0 :
+                (Receive && (ReadRxCounter == Rx_Pkt_size)) ? 1'b1 :
+                 Send_Stop[2];
+
+wire [7:0] SPIdata = 
+                     (Trans && (Tran_SPI_count == 3'b000)) ? RegCommand       :
+                     (Trans && (Tran_SPI_count == 3'b001)) ? RegVsync[31:24]  :
+                     (Trans && (Tran_SPI_count == 3'b010)) ? RegVsync[23:16]  :
+                     (Trans && (Tran_SPI_count == 3'b011)) ? RegVsync[15: 8]  :
+                     (Trans && (Tran_SPI_count == 3'b100)) ? RegVsync[ 7: 0]  :
+                     (Trans && (Tran_SPI_count == 3'b101)) ? Byte2SPI         : 
+                     (Receive && !ReadRxFIFO)              ? RegRxCommand     :
+                     (Receive &&  ReadRxFIFO)              ? 8'h00            :
+                     Send_Data[23:16];
                    
                    
 CC1200SPI CC1200SPI_inst(
@@ -186,5 +230,8 @@ CC1200SPI CC1200SPI_inst(
 .MISO(MISO),
 .CS_n(CS_n)
     );
+
+assign RxData  = SPIDataIn;
+assign RxValid = Load_Next;
     
 endmodule
