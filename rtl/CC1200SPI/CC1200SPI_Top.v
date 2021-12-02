@@ -42,7 +42,7 @@ input        GetDataEn,
 input [11:0] GetData,
 output       Next_data,
 
-output [7:0] RxData,
+output [11:0] RxData,
 output       RxValid,
 
 output SCLK,
@@ -141,25 +141,25 @@ always @(posedge clk or negedge rstn)
      else if (DevTranStart == 2'b01) Tran_SPI_count <=3'b001;  
      else if (Load_Next) Tran_SPI_count <= Tran_SPI_count + 1;  
 
-reg [1:0] SPIdatactrl;
+reg [1:0] TxSPIdatactrl;
 always @(posedge clk or negedge rstn) 
-    if (!rstn) SPIdatactrl <= 2'b00;
-     else if (Tran_SPI_count != 3'b101) SPIdatactrl <= 2'b00;
-     else if (SPIdatactrl == 2'b11) SPIdatactrl <= 2'b00;
-     else if (Load_Next) SPIdatactrl <= SPIdatactrl + 1;
+    if (!rstn) TxSPIdatactrl <= 2'b00;
+     else if (Tran_SPI_count != 3'b101) TxSPIdatactrl <= 2'b00;
+     else if (TxSPIdatactrl == 2'b11) TxSPIdatactrl <= 2'b00;
+     else if (Load_Next) TxSPIdatactrl <= TxSPIdatactrl + 1;
      
-reg [11:0] SavePreData;
+reg [11:0] TxSavePreData;
 always @(posedge clk or negedge rstn) 
-    if (!rstn) SavePreData <= 12'h000;
-     else if (Load_Next) SavePreData <= GetData;
+    if (!rstn) TxSavePreData <= 12'h000;
+     else if (Load_Next) TxSavePreData <= GetData;
     
-wire [7:0] Byte2SPI = (Tran_SPI_count != 3'b101) ? 8'h00                            :
-                      (SPIdatactrl == 2'b00)     ? GetData[7:0]                     :
-                      (SPIdatactrl == 2'b01)     ? {GetData[3:0],SavePreData[11:8]} :
-                      (SPIdatactrl == 2'b10)     ? SavePreData[11:4]                : 8'h00;
+wire [7:0] Byte2SPI = (Tran_SPI_count != 3'b101) ? 8'h00                             :
+                      (TxSPIdatactrl == 2'b00)   ? GetData[7:0]                      :
+                      (TxSPIdatactrl == 2'b01)   ? {GetData[3:0],TxSavePreData[11:8]}:
+                      (TxSPIdatactrl == 2'b10)   ? TxSavePreData[11:4]               : 8'h00;
                       
 assign Next_data = (Tran_SPI_count != 3'b101) ? 1'b0 : 
-                   (SPIdatactrl    ==  2'b10) ? 1'b0 : Load_Next ;
+                   (TxSPIdatactrl  ==  2'b10) ? 1'b0 : Load_Next ;
 
 /////////////////// End of Transmit Data from Memory ///////////////////
 
@@ -189,7 +189,40 @@ always @(posedge clk or negedge rstn)
     if (!rstn) ReadRxCounter <= 8'h00;
      else if (!ReadRxFIFO) ReadRxCounter <= 8'h00;
      else if (Load_Next) ReadRxCounter <= ReadRxCounter + 1;
-     
+
+//reg [1:0] DevTranStart;
+//always @(posedge clk or negedge rstn)
+//    if (!rstn) DevTranStart <= 2'b00;
+//     else DevTranStart <= {DevTranStart[0],(Trans && GetDataEn)};
+
+reg [2:0] Rx_SPI_count;
+always @(posedge clk or negedge rstn) 
+    if (!rstn) Rx_SPI_count <= 3'b000;
+     else if (!ReadRxFIFO) Rx_SPI_count <= 3'b000;
+     else if (Rx_SPI_count == 3'b101) Rx_SPI_count <= 3'b101;
+     else if (negRxPkt) Rx_SPI_count <=3'b001;  
+     else if (Load_Next) Rx_SPI_count <= Rx_SPI_count + 1;  
+
+reg [1:0] RxSPIdatactrl;
+always @(posedge clk or negedge rstn) 
+    if (!rstn) RxSPIdatactrl <= 2'b00;
+     else if (Rx_SPI_count != 3'b101) RxSPIdatactrl <= 2'b00;
+     else if (RxSPIdatactrl == 2'b11) RxSPIdatactrl <= 2'b00;
+     else if (Load_Next) RxSPIdatactrl <= RxSPIdatactrl + 1;
+
+reg [7:0] RxSavePreData;
+always @(posedge clk or negedge rstn) 
+    if (!rstn) RxSavePreData <= 12'h000;
+     else if (Load_Next) RxSavePreData <= SPIDataIn;
+
+
+assign RxData = (!ReadRxCounter) ? 8'h00                             :
+                (RxSPIdatactrl == 2'b00)   ? 12'h000                    :
+                (RxSPIdatactrl == 2'b01)   ? {SPIDataIn[3:0],RxSavePreData}:
+                (RxSPIdatactrl == 2'b10)   ? {SPIDataIn,RxSavePreData[7:4]}: 8'h00;
+                      
+assign RxValid = (!ReadRxCounter) ? 1'b0 : 
+                 (|RxSPIdatactrl) ? Load_Next : 1'b0;
      
 /////////////////// End of Receive data to Memory   ///////////////////
                      
@@ -231,7 +264,5 @@ CC1200SPI CC1200SPI_inst(
 .CS_n(CS_n)
     );
 
-assign RxData  = SPIDataIn;
-assign RxValid = Load_Next;
     
 endmodule

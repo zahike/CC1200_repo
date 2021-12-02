@@ -121,9 +121,55 @@ WriteAXI (32'h00000000,32'h00000004);   // Set Byte Number
 force CC1200SPI_Top_inst.GPIO_In = 4'h8;
 #1000;
 force CC1200SPI_Top_inst.GPIO_In = 4'h0;
+//@( MOSI);
+@(negedge MOSI);
+#1;
+//MISO_Reg = 32'h12345678;
 
 end
 
+reg [2:0] SPIcount;
+always @(negedge SCLK or negedge rstn)
+    if (!rstn) SPIcount <= 3'b000;
+     else SPIcount <= SPIcount + 1;
+reg [4:0] SPIwAdd;
+always @(negedge SCLK or negedge rstn)
+    if (!rstn) SPIwAdd <= 5'h00;
+     else if (SPIcount == 3'b111) SPIwAdd <= SPIwAdd + 1;
+reg [7:0] ShiftMOSI;
+always @(posedge SCLK or negedge rstn)
+    if (!rstn) ShiftMOSI <= 8'h00;
+     else ShiftMOSI <= {ShiftMOSI[6:0],MOSI};
+reg dSCLK;
+always @(posedge clk or negedge rstn)
+    if (!rstn) dSCLK <= 1'b0;
+     else dSCLK <= SCLK;     
+wire LoadSPIdata = (dSCLK && !SCLK && (SPIcount == 3'b000));     
+reg [7:0] SPImem [0:31];
+reg [7:0] Reg_SPImem;
+always @(posedge clk) 
+    if (dSCLK && SCLK && (SPIcount == 3'b111)) SPImem[SPIwAdd] <= ShiftMOSI;
+//always @(posedge clk) 
+//    Reg_SPImem <= SPImem[
+reg [4:0] SPIRAdd;
+always @(negedge SCLK or negedge rstn)
+    if (!rstn) SPIRAdd <= 5'h00;
+     else if (SPIcount == 3'b111) SPIRAdd <= SPIRAdd + 1;
+
+initial begin 
+#40000;
+SPIwAdd = 5'h00;
+#30000;
+SPIRAdd = 5'h00;
+//force MISO = 
+//MISO_Reg = {SPImem[SPIRAdd],24'h000000};
+while (1) begin
+    MISO_Reg = {SPImem[SPIRAdd],24'h000000};
+    @(SPIcount == 3'b111);
+    @(SPIcount == 3'b000);
+//    @(negedge LoadSPIdata);
+end
+end 
      
 //CC1200SPI CC1200SPI_inst(
 //.clk (clk ),
