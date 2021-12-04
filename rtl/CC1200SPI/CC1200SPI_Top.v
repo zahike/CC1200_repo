@@ -45,6 +45,9 @@ output       Next_data,
 output [11:0] RxData,
 output       RxValid,
 
+output wire [15:0] CS_nCounter,
+output wire [7:0] ShiftMISO,
+
 output SCLK,
 output MOSI,
 input  MISO,
@@ -122,21 +125,56 @@ always @(posedge clk or negedge rstn)
 //output       Next_data,
 
 
-
+wire [7:0] TxByteNum = 8'h12;
 wire [7:0] RegCommand = 8'h7F;
 wire [31:0] RegVsync  = 32'h930b51de;
 wire [31:0] RegHsync  = 32'h6cf4ae21;
 //reg TransOn;
 
+reg TransOn;   
+reg [7:0] TxByteCounter;
+reg [19:0] TxWaitCounter;
+reg [1:0] TxSM;
+reg [1:0] TxSM_next;
+always @(*)
+    case (TxSM)
+    2'b00 : if (TransOn) TxSM_next <= 2'b01;
+             else TxSM_next <= 2'b00;
+    2'b01 : if (GPIO_In[3]) TxSM_next <= 2'b10;
+             else TxSM_next <= 2'b01;
+    2'b10 : if (!GPIO_In[3]) TxSM_next <= 2'b11;
+             else TxSM_next <= 2'b10;
+    2'b11 : if (TxWaitCounter == 20'hfffff) TxSM_next <= 2'b00;
+             else TxSM_next <= 2'b11;
+    default :  TxSM_next <= 2'b00;
+    endcase         
+always @(posedge clk or negedge rstn)
+    if (!rstn) TxSM <= 2'b00;
+     else TxSM <= TxSM_next;
+                                 
+always @(posedge clk or negedge rstn)
+    if (!rstn) TransOn <= 1'b0;
+     else if (TxByteCounter == TxByteNum) TransOn <= 1'b0;
+     else if ((TxSM == 2'b00) && Trans && GetDataEn) TransOn <= 1'b1;
 reg [1:0] DevTranStart;
 always @(posedge clk or negedge rstn)
     if (!rstn) DevTranStart <= 2'b00;
-     else DevTranStart <= {DevTranStart[0],(Trans && GetDataEn)};
+     else DevTranStart <= {DevTranStart[0],TransOn};
+     
+always @(posedge clk or negedge rstn)
+    if (!rstn) TxByteCounter <= 8'h00;
+     else if (!TransOn) TxByteCounter <= 8'h00;
+     else if (Load_Next) TxByteCounter <= TxByteCounter + 1;
 
+always @(posedge clk or negedge rstn)
+    if (!rstn) TxWaitCounter <= 20'h00000;
+     else if (TxSM != 2'b11) TxWaitCounter <= 20'h00000;
+     else TxWaitCounter <= TxWaitCounter + 1;
+          
 reg [2:0] Tran_SPI_count;
 always @(posedge clk or negedge rstn) 
     if (!rstn) Tran_SPI_count <= 3'b000;
-     else if (!(Trans && GetDataEn)) Tran_SPI_count <= 3'b000;
+     else if (!TransOn) Tran_SPI_count <= 3'b000;
      else if (Tran_SPI_count == 3'b101) Tran_SPI_count <= 3'b101;
      else if (DevTranStart == 2'b01) Tran_SPI_count <=3'b001;  
      else if (Load_Next) Tran_SPI_count <= Tran_SPI_count + 1;  
@@ -190,11 +228,6 @@ always @(posedge clk or negedge rstn)
      else if (!ReadRxFIFO) ReadRxCounter <= 8'h00;
      else if (Load_Next) ReadRxCounter <= ReadRxCounter + 1;
 
-//reg [1:0] DevTranStart;
-//always @(posedge clk or negedge rstn)
-//    if (!rstn) DevTranStart <= 2'b00;
-//     else DevTranStart <= {DevTranStart[0],(Trans && GetDataEn)};
-
 reg [2:0] Rx_SPI_count;
 always @(posedge clk or negedge rstn) 
     if (!rstn) Rx_SPI_count <= 3'b000;
@@ -228,7 +261,8 @@ assign RxValid = (!ReadRxCounter) ? 1'b0 :
                      
 wire SPIstart = (Trans)   ? (DevTranStart == 2'b01) : 
                 (Receive) ? negRxPkt : Start;
-wire SPIstop  = (Trans) ? (DevTranStart == 2'b00) : 
+//wire SPIstop  = (Trans) ? (DevTranStart == 2'b00) : 
+wire SPIstop  = (Trans) ? !TransOn : 
                 (Receive && (ReadRxCounter != Rx_Pkt_size)) ? 1'b0 :
                 (Receive && (ReadRxCounter == Rx_Pkt_size)) ? 1'b1 :
                  Send_Stop[2];
@@ -264,5 +298,28 @@ CC1200SPI CC1200SPI_inst(
 .CS_n(CS_n)
     );
 
-    
+reg DelCS_n;
+always @(posedge clk or negedge rstn)
+    if (!rstn) DelCS_n <= 1'b0;
+     else DelCS_n <= CS_n;
+reg DelSCLK;
+always @(posedge clk or negedge rstn)
+    if (!rstn) DelSCLK <= 1'b0;
+     else DelSCLK <= SCLK;
+reg [15:0] Reg_CS_nCounter;
+always @(posedge clk or negedge rstn)
+    if (!rstn) Reg_CS_nCounter <= 16'h0000;
+     else if (CS_n && !DelCS_n) Reg_CS_nCounter <= Reg_CS_nCounter + 1;
+assign CS_nCounter = Reg_CS_nCounter;    
+//reg [2:0] RegMISOCount;
+//always @(posedge clk or negedge clk)
+//    if (!rstn) RegMISOCount <= 3'b000;
+//     else if (CS_n) RegMISOCount <= 3'b000;
+//     else if (!SCLK && DelSCLK) RegMISOCount <= RegMISOCount + 1;
+reg [7:0] Reg_ShiftMISO;
+always @(posedge clk or negedge rstn)
+    if (!rstn) Reg_ShiftMISO <= 8'h00;
+//     else if (CS_n) Reg_ShiftMISO <= 8'h00;
+     else if (DelSCLK && !SCLK) Reg_ShiftMISO <= {Reg_ShiftMISO[6:0],MISO};
+assign ShiftMISO = Reg_ShiftMISO;     
 endmodule

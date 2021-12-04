@@ -45,6 +45,7 @@ inout  FIXED_IO_ps_porb,
 inout  FIXED_IO_ps_srstb,
 //Pmod Header JB
 input [3:0] sw,
+input [3:0] btn,
 inout [2:1] jb_p,
 inout [2:1] jb_n,
 inout [4:1] jc_p,
@@ -61,6 +62,7 @@ inout CS_n
 
     );
 wire clk;    
+wire rstn = ~btn[0];
 /////////////////////////////////////////////////////////// 
 /////////////////// CC1200 Block design /////////////////// 
 /////////////////////////////////////////////////////////// 
@@ -110,6 +112,7 @@ CC1200_BD CC1200_BD_inst
 .MISO_0(MISO_0),        //input  MISO_0
 .CS_n_0(CS_n_0),		//output  CS_n_0
 
+.reset_rtl(rstn),
 .clk(clk)
 );    
 
@@ -130,7 +133,7 @@ assign  MISO_I = MISO;  	//input  MISO_0;
 assign  CS_n_I = CS_n;		//output  CS_n_0;
 
 assign MISO_0 = MISO;
-
+/*
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 ila_0 ila_0_inst (
 	.clk(clk), // input wire clk
@@ -143,6 +146,7 @@ ila_0 ila_0_inst (
     .probe5(MISO_I), // input wire [0:0]  probe5 
     .probe6(CS_n_I) // input wire [0:0]  probe6
 );
+*/
 ////----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 
 //ila_1 ila_1_inst (

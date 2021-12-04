@@ -115,15 +115,19 @@ WriteAXI (32'h00000000,32'h00000001);   // start
 WriteAXI (32'h00000010,32'h0000000f);   // Set Byte Number
 #10000; 
 WriteAXI (32'h00000000,32'h00000002);   // Set Byte Number
-#40000;
-WriteAXI (32'h00000000,32'h00000004);   // Set Byte Number
+//#40000;
+//WriteAXI (32'h00000000,32'h00000004);   // Set Byte Number
+//#1000;
+while (1) begin
+@(posedge CS_n);
 #1000;
 force CC1200SPI_Top_inst.GPIO_In = 4'h8;
 #1000;
 force CC1200SPI_Top_inst.GPIO_In = 4'h0;
-//@( MOSI);
-@(negedge MOSI);
-#1;
+end
+////@( MOSI);
+//@(negedge MOSI);
+//#1;
 //MISO_Reg = 32'h12345678;
 
 end
@@ -156,20 +160,20 @@ always @(negedge SCLK or negedge rstn)
     if (!rstn) SPIRAdd <= 5'h00;
      else if (SPIcount == 3'b111) SPIRAdd <= SPIRAdd + 1;
 
-initial begin 
-#40000;
-SPIwAdd = 5'h00;
-#30000;
-SPIRAdd = 5'h00;
-//force MISO = 
-//MISO_Reg = {SPImem[SPIRAdd],24'h000000};
-while (1) begin
-    MISO_Reg = {SPImem[SPIRAdd],24'h000000};
-    @(SPIcount == 3'b111);
-    @(SPIcount == 3'b000);
-//    @(negedge LoadSPIdata);
-end
-end 
+//initial begin 
+//#40000;
+//SPIwAdd = 5'h00;
+//#30000;
+//SPIRAdd = 5'h00;
+////force MISO = 
+////MISO_Reg = {SPImem[SPIRAdd],24'h000000};
+//while (1) begin
+//    MISO_Reg = {SPImem[SPIRAdd],24'h000000};
+//    @(SPIcount == 3'b111);
+//    @(SPIcount == 3'b000);
+////    @(negedge LoadSPIdata);
+//end
+//end 
      
 //CC1200SPI CC1200SPI_inst(
 //.clk (clk ),
@@ -207,7 +211,9 @@ WAdd  = 7'h00;
 @(posedge rstn);
 #100;
 repeat (128) begin
- Write1AXI({21'h000001,WAdd,2'b00},{20'h00000,WData[3:0],1'b0,WData});
+// Write1AXI({21'h000001,WAdd,2'b00},{20'h00000,WData[3:0],1'b0,WData});
+// Write1AXI({21'h000001,WAdd,2'b00},{20'h00000,WAdd[3:0],1'b0,WAdd});
+ Write1AXI({21'h000001,WAdd,2'b00},{20'h000000,1'b0,WAdd});
  WAdd  = WAdd  + 1;
  WData = WData - 1;
  @(posedge APBclk);

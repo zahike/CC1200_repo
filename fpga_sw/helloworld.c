@@ -50,6 +50,8 @@
 #include "xil_printf.h"
 #include "CC1200.h"
 
+#define TX
+//#define Rx
 u32 *CC1200 = XPAR_APB_M_0_BASEADDR;
 u32 *MEM    = XPAR_APB_M_1_BASEADDR;
 
@@ -71,18 +73,26 @@ int main()
 
     xil_printf("Hello World\n\r");
 
-    for (i=0;i<128;i++){
-    	MEM[128+i] = 256*i+i;
-    }
+#ifdef TX
+    xil_printf("Set as TX\n\r");
 
-    CC1200[6] = 1;
+    for (i=0;i<128;i++){
+//    	MEM[128+i] = 256*i+i;
+    	MEM[128+i] = i;
+    }
+#elif RX
+    xil_printf("Set as RX\n\r");
+
+#endif
+
+    CC1200[6] = 1;		// Hard Reset chip
     CC1200[7] = 0;
     usleep(100);
     CC1200[7] = 1;
     CC1200[5] = 16;
 
     CC1200[4] = 4;        // switch to command mode
-    CC1200[2] = 0x300000; // Reset chip
+    CC1200[2] = 0x300000; // Soft Reset chip
     CC1200[0] = 1;
 	loop = 1;
 	while (loop)
@@ -109,9 +119,11 @@ int main()
     xil_printf("Chip reset succesfuly \n\r");
 
 
-
-//    CC1200_init();
+#ifdef TX
+    CC1200_init();
+#elif RX
 	RxCC1200_init();
+#endif
 
     xil_printf("Read normal registers\n\r");
 
@@ -131,8 +143,13 @@ int main()
     }
 
     CC1200[4] = 4;        // switch to command mode
-//    CC1200[2] = 0x350000; // set chip to Tx
+#ifdef TX
+    xil_printf("set chip to Tx\n\r");
+    CC1200[2] = 0x350000; // set chip to Tx
+#elif RX
+    xil_printf("set chip to Rx\n\r");
     CC1200[2] = 0x340000; // set chip to Rx
+#endif
     CC1200[0] = 1;
 	loop = 1;
 	while (loop)
@@ -142,8 +159,7 @@ int main()
 
     CC1200[2] = 0x3d0000;  // check if module in Tx
     data = 0;
-//    while (data != 0x20)
-    while (data != 0x10)
+    while ((data != 0x20) && (data != 0x10))
     {
 		CC1200[0] = 1;
 		loop = 1;
@@ -152,22 +168,23 @@ int main()
 			loop = CC1200[1];
 		};
 		data = CC1200[3] & 0xf0;
-//		if (data != 0x20)
-//		{
-//			xil_printf("Chip is not in Tx\n\r");
-//		}
-		if (data != 0x10)
+		if ((data != 0x20) && (data != 0x10))
 		{
-			xil_printf("Chip is not in Rx\n\r");
+			xil_printf("Chip is not set\n\r");
 		}
     }
-//	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
+    if (data == 0x20){
+	xil_printf("Switch to Tx seccesfuly in Tx\n\r");
+    } else if (data == 0x10){
 	xil_printf("Switch to Rx seccesfuly in Rx\n\r");
+    }
 
-//	CC1200[0] = 2; // Enable Tx
-	CC1200[0] = 4; // Enable Rx
-//	MEM[0] = 1;		// send data from FIFO
-
+#ifdef TX
+   	CC1200[0] = 2; // Enable Tx
+	MEM[0] = 1;		// send data from FIFO
+#elif RX
+    CC1200[0] = 4; // Enable Rx
+#endif
     xil_printf("GoodBye World\n\r");
 
     cleanup_platform();

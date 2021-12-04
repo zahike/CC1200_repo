@@ -44,15 +44,15 @@ reg  RegStart   ;
 always @(posedge clk or negedge rstn)
     if (!rstn) RegStart <= 1'b0;
      else if (RegStart) RegStart <= 1'b0;
-     else if (APB_S_0_penable && APB_S_0_psel && APB_S_0_pwrite && (APB_S_0_paddr[9:0] == 10'h000)) RegStart <= 1'b1;
+     else if (APB_S_0_penable && APB_S_0_psel && APB_S_0_pwrite && (APB_S_0_paddr[9:0] == 10'h000)) RegStart <= APB_S_0_pwdata[0];
 
 reg Reg_tran;
 reg [6:0] TranAddCounter;
 
 always @(posedge clk or negedge rstn)
     if (!rstn) Reg_tran <= 1'b0;
-     else if (RegStart) Reg_tran <= 1'b1;
-     else if (TranAddCounter == 7'h0a) Reg_tran <= 1'b0;
+     else if (RegStart) Reg_tran <= RegStart;
+//     else if (TranAddCounter == 7'h0a) Reg_tran <= 1'b0;
 
 assign  TranSPIen = Reg_tran;
      
@@ -74,7 +74,8 @@ always @(posedge clk)
 assign data2SPI = Reg_TestMem;
 
 assign APB_S_0_prdata = 
-                        (APB_S_0_paddr[9]   == 1'b1 ) ? {20'h00000,Reg_TestMem}     : 
+                        (APB_S_0_paddr[9:0] == 10'h000 ) ? {31'h00000000,RegStart}     : 
+                        (APB_S_0_paddr[9]   == 1'b1    ) ? {20'h00000,Reg_TestMem}     : 
                         32'h00000000;
 
 reg Reg_pready;
