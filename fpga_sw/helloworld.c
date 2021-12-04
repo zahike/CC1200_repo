@@ -50,8 +50,10 @@
 #include "xil_printf.h"
 #include "CC1200.h"
 
-#define TX
-//#define Rx
+//#define TX
+#define RX
+#define Tx_Pkt_size 0x12
+#define Rx_Pkt_size 0x12
 u32 *CC1200 = XPAR_APB_M_0_BASEADDR;
 u32 *MEM    = XPAR_APB_M_1_BASEADDR;
 
@@ -60,8 +62,8 @@ int readSCC120 (int add);
 int writeLCC120 (int add, int data);
 int readLCC120 (int add);
 
-void CC1200_init();
-void RxCC1200_init();
+void CC1200_init(int Pkt_size);
+void RxCC1200_init(int Pkt_size);
 
 int main()
 {
@@ -80,7 +82,8 @@ int main()
 //    	MEM[128+i] = 256*i+i;
     	MEM[128+i] = i;
     }
-#elif RX
+#endif
+#ifdef RX
     xil_printf("Set as RX\n\r");
 
 #endif
@@ -120,9 +123,10 @@ int main()
 
 
 #ifdef TX
-    CC1200_init();
-#elif RX
-	RxCC1200_init();
+    CC1200_init(Tx_Pkt_size);
+#endif
+#ifdef RX
+	RxCC1200_init(Rx_Pkt_size);
 #endif
 
     xil_printf("Read normal registers\n\r");
@@ -146,7 +150,8 @@ int main()
 #ifdef TX
     xil_printf("set chip to Tx\n\r");
     CC1200[2] = 0x350000; // set chip to Tx
-#elif RX
+#endif
+#ifdef RX
     xil_printf("set chip to Rx\n\r");
     CC1200[2] = 0x340000; // set chip to Rx
 #endif
@@ -180,9 +185,12 @@ int main()
     }
 
 #ifdef TX
+    CC1200[9] = Tx_Pkt_size; // Tx Pkt Size
    	CC1200[0] = 2; // Enable Tx
 	MEM[0] = 1;		// send data from FIFO
-#elif RX
+#endif
+#ifdef RX
+    CC1200[10] = Rx_Pkt_size + 2; // Rx Pkt Size
     CC1200[0] = 4; // Enable Rx
 #endif
     xil_printf("GoodBye World\n\r");

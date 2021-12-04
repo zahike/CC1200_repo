@@ -62,6 +62,8 @@ wire [3:0]  WR           ; // output [3:0]  WR,
 wire [15:0] ClockDiv     ; // output [15:0] ClockDiv,
 wire        Trans        ; // output Trans
 wire        Receive      ; // output Receive
+wire [7:0] Tx_Pkt_size   ; // output [7:0] Tx_Pkt_size,
+wire [7:0] Rx_Pkt_size   ; // output [7:0] Rx_Pkt_size,
 
 CC1200SPI_Regs CC1200SPI_Regs_inst(
 .clk(APBclk),
@@ -85,6 +87,9 @@ CC1200SPI_Regs CC1200SPI_Regs_inst(
 .GPIO_OutEn(GPIO_OutEn),    // output [3:0]  GPIO_OutEn, 
 .GPIO_Out  (GPIO_Out  ),      // output [3:0]  GPIO_Out,
 .GPIO_In   (GPIO_In   ),     // input  [3:0]  GPIO_In
+.Tx_Pkt_size(Tx_Pkt_size), // output [7:0] Tx_Pkt_size,
+.Rx_Pkt_size(Rx_Pkt_size), // output [7:0] Rx_Pkt_size,
+
 
 .Trans     (Trans     ),     // output Trans
 .Receive   (Receive   ) // output Receive
@@ -125,7 +130,7 @@ always @(posedge clk or negedge rstn)
 //output       Next_data,
 
 
-wire [7:0] TxByteNum = 8'h12;
+//wire [7:0] Tx_Pkt_size = 8'h12;
 wire [7:0] RegCommand = 8'h7F;
 wire [31:0] RegVsync  = 32'h930b51de;
 wire [31:0] RegHsync  = 32'h6cf4ae21;
@@ -154,7 +159,7 @@ always @(posedge clk or negedge rstn)
                                  
 always @(posedge clk or negedge rstn)
     if (!rstn) TransOn <= 1'b0;
-     else if (TxByteCounter == TxByteNum) TransOn <= 1'b0;
+     else if (TxByteCounter == Tx_Pkt_size) TransOn <= 1'b0;
      else if ((TxSM == 2'b00) && Trans && GetDataEn) TransOn <= 1'b1;
 reg [1:0] DevTranStart;
 always @(posedge clk or negedge rstn)
@@ -206,7 +211,7 @@ assign Next_data = (Tran_SPI_count != 3'b101) ? 1'b0 :
 /////////////////////////////////////////////////////////////////
 //GPIO_In
 wire [7:0] RegRxCommand = 8'hFF;
-wire [7:0] Rx_Pkt_size  = 8'h0c;
+//wire [7:0] Rx_Pkt_size  = 8'h14;
 
 reg [1:0] DevRxPkt;
 always @(posedge clk or negedge rstn)

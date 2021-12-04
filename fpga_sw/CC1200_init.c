@@ -7,7 +7,7 @@
 
 #include "CC1200.h"
 
-void CC1200_init()
+void CC1200_init(int Pkt_size)
 {
 	writeSCC120(0x0000,   0x06);
 	writeSCC120(0x0001,   0x06);
@@ -57,7 +57,8 @@ void CC1200_init()
 	writeSCC120(0x002D,   0x0F);
 //	writeSCC120(0x002E,   0x01);   // Paket length 1 byte
 //	writeSCC120(0x002E,   0x7c);   // Paket length 124 byts
-	writeSCC120(0x002E,   0x12);   // Paket length 13 byts
+//	writeSCC120(0x002E,   0x12);   // Paket length 13 byts
+	writeSCC120(0x002E,   Pkt_size);   // Paket length 13 byts
 	
 	writeLCC120(0x2F00,   0x00);
 	writeLCC120(0x2F01,   0x23);
